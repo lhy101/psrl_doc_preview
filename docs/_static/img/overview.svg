@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">
+  <rect width="800" height="200" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <text x="400" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">
+    [Placeholder] Replace with: overview_new.pdf → SVG
+  </text>
+  <text x="400" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#adb5bd">
+    Source: /jizhicfs/lhy/psrl_paper_overleaf/figures/
+  </text>
+</svg>
