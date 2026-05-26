@@ -423,6 +423,33 @@ Configuration for RDMA-based weight synchronization via NIXL (used when
   is resumed.
   **Default:** `${psrl.tms.enable_nixl}`
 
+### Checkpoint
+
+Controls the Megatron checkpoint save/load strategy. Relevant only when using the
+Megatron-LM training backend.
+
+`checkpoint.use_dcp_save`
+: Whether to use verl's default DCP (Distributed Checkpointing) for save/load.
+
+  - **`False` (default)** — uses PSRL's per-rank `torch.save` (saves `rank_N.pt` +
+    `parallel_config.json` per rank). This path is UCX-safe: it avoids DCP's
+    `FullyParallelSaveStrategyWrapper` which calls `all_gather_object` on all shard
+    metadata, causing a large temporary allocation that can corrupt NIXL's UCX
+    endpoint memory under high memory pressure (manifests as
+    `addr_version assertion` SIGABRT). The NIXL background UCX progress thread
+    (`enable_prog_thread`) is kept **enabled** in this mode.
+
+  - **`True`** — uses verl's DCP path. Two patches are applied automatically:
+    1. **NCCL no-fork patch**: DCP's async writer normally forks child processes
+       that inherit NCCL communicators; when the child exits, `ncclCommAbort`
+       corrupts the parent's NCCL state → 600-second timeout → SIGABRT. The patch
+       replaces the forking multiproc writer with a sequential in-process version.
+    2. **NIXL prog_thread disabled**: `enable_prog_thread=False` is passed to the
+       NIXL agent to prevent the UCX background thread from racing with DCP's
+       `all_gather_object` memory activity.
+
+  **Default:** `False`
+
 ### LMCache
 
 KV cache offloading and cross-instance P2P transfer for reducing re-prefill overhead

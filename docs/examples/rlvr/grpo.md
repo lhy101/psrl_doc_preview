@@ -1,4 +1,4 @@
-# GRPO Training Example
+# GRPO: Group Relative Policy Optimization
 
 ```{admonition} Coming Soon
 :class: tip
@@ -6,9 +6,11 @@
 This example is under development. Check back for a full GRPO walkthrough.
 ```
 
+---
+
 ## Algorithm Overview
 
-**Group Relative Policy Optimization (GRPO)** keeps PPO's clipped surrogate objective
+GRPO (Group Relative Policy Optimization) keeps PPO's clipped surrogate objective
 but **eliminates the learned critic** by normalizing rewards within a group of
 rollouts generated from the same prompt.
 

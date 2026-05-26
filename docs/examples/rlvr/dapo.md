@@ -1,4 +1,4 @@
-# DAPO Training Example
+# DAPO: Dynamic Sampling Aligned Policy Optimization
 
 DAPO (Dynamic sampling Aligned Policy Optimization) is the third entry in the
 [PPO](ppo) → [GRPO](grpo) → DAPO progression: it keeps GRPO's per-prompt

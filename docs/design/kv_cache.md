@@ -80,9 +80,9 @@ psrl:
 :::{admonition} `clear_on_weight_update`
 :class: important
 
-When the rollout instance syncs to a new model version, all cached KV becomes **stale**: it was computed with the old weights. Setting `clear_on_weight_update: true` (the default) invalidates the entire cache on sync. This is correct but expensive for multi-turn trajectories that span a version boundary.
+When the rollout instance syncs to a new model version, all cached KV becomes **stale**: it was computed with the old weights. Setting `clear_on_weight_update: true` (the default) invalidates the entire cache on sync, which is correct but expensive for multi-turn trajectories that span a version boundary.
 
-For `staleness ≥ 1` with partial rollout enabled, consider setting this to `false` and relying on the staleness bounds to limit the impact of slightly stale KV. This is an accuracy-performance trade-off.
+Under any `staleness ≥ 1` setting, **keeping `clear_on_weight_update: true` is recommended**: continuing to serve subsequent turns from KV computed by stale weights causes accuracy degradation that compounds on top of the staleness bound itself. Set it to `false` only if you are willing to trade a measurable accuracy hit for the throughput win on long multi-turn trajectories.
 :::
 
 :::{tip}
