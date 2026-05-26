@@ -6,16 +6,16 @@ Staleness control is PSRL's mechanism for maintaining training quality in the fa
 
 ## What is Staleness?
 
-In synchronous RL training, the policy used for generation is always identical to the policy being updated, staleness is zero. In asynchronous systems like PSRL, generation uses an older policy (version $v$) while training has moved ahead to version $v + k$.
+In synchronous RL training, the policy used for generation is always identical to the policy being updated, staleness is zero. In asynchronous systems like PSRL, generation uses an older policy (version $v$) while training has moved ahead to version $v + \eta$.
 
 $$
-\text{staleness} = k = v_{\text{train}} - v_{\text{gen}}
+\text{staleness} = \eta = v_{\text{train}} - v_{\text{gen}}
 $$
 
 Where:
 - $v_{\text{gen}}$ is the model version used to generate the trajectory.
 - $v_{\text{train}}$ is the model version at the time the trajectory is consumed for training.
-- $k$ is the number of training steps between generation and consumption.
+- $\eta$ is the number of training steps between generation and consumption.
 
 **`psrl.staleness`** sets the maximum allowed staleness. This is the core knob for the throughput-freshness trade-off:
 

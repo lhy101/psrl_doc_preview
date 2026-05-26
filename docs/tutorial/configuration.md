@@ -431,7 +431,7 @@ Megatron-LM training backend.
 `checkpoint.use_dcp_save`
 : Whether to use verl's default DCP (Distributed Checkpointing) for save/load.
 
-  - **`False` (default)** — uses PSRL's per-rank `torch.save` (saves `rank_N.pt` +
+  - **`False` (default)**: Use PSRL's per-rank `torch.save` (saves `rank_N.pt` +
     `parallel_config.json` per rank). This path is UCX-safe: it avoids DCP's
     `FullyParallelSaveStrategyWrapper` which calls `all_gather_object` on all shard
     metadata, causing a large temporary allocation that can corrupt NIXL's UCX
@@ -439,7 +439,7 @@ Megatron-LM training backend.
     `addr_version assertion` SIGABRT). The NIXL background UCX progress thread
     (`enable_prog_thread`) is kept **enabled** in this mode.
 
-  - **`True`** — uses verl's DCP path. Two patches are applied automatically:
+  - **`True`**: Use verl's DCP path. Two patches are applied automatically:
     1. **NCCL no-fork patch**: DCP's async writer normally forks child processes
        that inherit NCCL communicators; when the child exits, `ncclCommAbort`
        corrupts the parent's NCCL state → 600-second timeout → SIGABRT. The patch
