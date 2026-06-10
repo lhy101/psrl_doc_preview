@@ -1,9 +1,11 @@
 # -- PSRL Documentation Configuration ------------------------------------
 # Built with Sphinx using pydata-sphinx-theme (Ray-style).
 # Supports both Markdown (.md) and reStructuredText (.rst).
-#
-# This is a documentation-only repository (no Python source lives here).
-# The corresponding code lives at https://github.com/lhy101/psrl.
+
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information --------------------------------------------------
 
@@ -18,6 +20,8 @@ extensions = [
     # Markdown support via MyST
     "myst_parser",
     # Sphinx built-ins
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     # UI enhancements
@@ -50,7 +54,7 @@ source_suffix = {
 
 master_doc = "index"
 
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "README.md"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -74,7 +78,7 @@ html_theme_options = {
 
 html_context = {
     "github_user": "lhy101",
-    "github_repo": "psrl_doc",
+    "github_repo": "psrl",
     "github_version": "main",
     "doc_path": "docs/",
 }
@@ -87,6 +91,14 @@ html_js_files = ["js/relabel.js"]
 
 copybutton_prompt_text = r">>> |\.\.\. |\$ |> "
 copybutton_prompt_is_regexp = True
+
+# -- Intersphinx mapping --------------------------------------------------
+# Disabled: intersphinx is unavailable in restricted-network environments.
+# Re-enable by adding "sphinx.ext.intersphinx" to extensions and uncommenting below.
+# intersphinx_mapping = {
+#     "python": ("https://docs.python.org/3/", None),
+#     "torch": ("https://pytorch.org/docs/stable/", None),
+# }
 
 # -- Napoleon settings (Google/NumPy docstrings) --------------------------
 
