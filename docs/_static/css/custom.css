@@ -2,6 +2,10 @@
 
 :root {
     --pst-color-primary: #0071c5;
+    --pst-sidebar-primary-width: 18.75%;
+    --pst-sidebar-secondary: 12.75rem;
+    --pst-sidebar-drawer-width: 56.25%;
+    --pst-sidebar-drawer-max-width: 262.5px;
 }
 
 /* Bolder admonition titles */
@@ -35,4 +39,84 @@ div.highlight pre {
     border-radius: 4px;
     font-size: 0.75em;
     font-weight: 600;
+}
+
+/* Homepage hero branding */
+.psrl-hero-brand {
+    max-width: 420px;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    margin-bottom: 1.75rem;
+}
+
+/* Sidebar branding */
+.psrl-sidebar-brand {
+    padding: 0.6rem 0.35rem 0.45rem;
+    border-bottom: 1px solid var(--pst-color-border, #e0e0e0);
+    margin-bottom: 0.25rem;
+}
+
+.psrl-sidebar-brand__link {
+    display: block;
+    text-decoration: none;
+}
+
+.psrl-sidebar-brand__image {
+    max-height: 48px;
+    width: 100%;
+    object-fit: contain;
+}
+
+/* Sidebar width — 75% of pydata-sphinx-theme defaults */
+.bd-sidebar-primary {
+    width: var(--pst-sidebar-primary-width);
+}
+
+@media (max-width: 959.98px) {
+    .bd-sidebar-primary {
+        width: var(--pst-sidebar-drawer-width);
+        max-width: var(--pst-sidebar-drawer-max-width);
+        margin-left: calc(-1 * var(--pst-sidebar-drawer-width));
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .bd-sidebar-secondary {
+        width: var(--pst-sidebar-drawer-width);
+        max-width: var(--pst-sidebar-drawer-max-width);
+        margin-right: calc(-1 * var(--pst-sidebar-drawer-width));
+    }
+}
+
+/* Key Features cards — static, title + body always visible */
+.psrl-feature-card .sd-card {
+    border-left: 3px solid var(--pst-color-primary);
+    border-radius: 0.5rem;
+    height: 100%;
+}
+
+.psrl-feature-card .sd-card-header,
+.psrl-feature-card .sd-card-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+}
+
+.psrl-feature-card .sd-card-header {
+    border-bottom: 1px solid var(--pst-color-border, #e8e8e8);
+    padding: 0.9rem 1rem 0.75rem;
+    background: var(--pst-color-surface, #fafafa);
+}
+
+.psrl-feature-card .sd-card-body {
+    font-size: 0.875rem;
+    line-height: 1.55;
+    padding: 0.9rem 1rem 1rem;
+}
+
+.psrl-feature-card .sd-card-text {
+    color: var(--pst-color-text-muted, #5a5a5a);
+    margin-bottom: 0;
 }

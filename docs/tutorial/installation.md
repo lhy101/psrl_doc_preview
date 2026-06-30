@@ -45,10 +45,10 @@ pip install .
 
 - PyTorch 2.11.0 for CUDA 12.8, Triton, TensorDict, FlashAttention, FlashInfer,
   Apex, and common Python dependencies.
-- **SMG from the `psrl-dev` branch**, including the release Rust gateway, Python
+- SMG, including the release Rust gateway, Python
   binding, gRPC protocol/client package, PSRL state protocol, and gRPC servicer.
 - vLLM `releases/v0.22.0` and the PSRL vLLM patches.
-- A pinned veRL checkout and the PSRL veRL patches.
+- A pinned veRL checkout and the PSRL veRL patches. The pinned veRL requirements install `TransferQueue==0.1.7` during the core installation. `SimpleStorage` is the default TransferQueue backend.
 - `torch_memory_saver`.
 
 The installer clones sources under `third_party/`. Set `VLLM_PATH` or `VERL_PATH`
@@ -124,14 +124,6 @@ with `p2p_transfer_channel=nixl` also requires NIXL/UCX.
 
 ::::
 
-`torch_memory_saver` is installed by `install_basic.sh`; this checkout does not
-provide a separate `install_tms.sh`.
-
-The pinned veRL requirements install `TransferQueue==0.1.7` during the core
-installation.
-
-`SimpleStorage` is the default TransferQueue backend.
-
 ## Verification
 
 Run the checks below in sequence. Commands marked **(optional)** apply only if you
@@ -159,22 +151,22 @@ python -c "import verl; print('veRL:', verl.__file__)"
 python -c "import flash_attn; print('FlashAttention:', flash_attn.__version__)"
 ```
 
+**TMS (torch_memory_saver)**
+
+```bash
+python -c "import torch_memory_saver; print('TMS:', torch_memory_saver.__file__)"
+```
+
 **NIXL** *(optional, installed via `install_nixl.sh`)*
 
 ```bash
 python -c "import nixl; print('NIXL OK')"
 ```
 
-**Megatron-LM** *(optional, installed via `install_megatron.sh`)*
+**Megatron** *(optional, installed via `install_megatron.sh`)*
 
 ```bash
 python -c "import megatron; print('Megatron-LM:', megatron.__file__)"
-```
-
-**TMS (torch_memory_saver)** *(optional, installed via `install_tms.sh`)*
-
-```bash
-python -c "import torch_memory_saver; print('TMS:', torch_memory_saver.__file__)"
 ```
 
 **LMCache** *(optional, installed via `install_lmcache.sh`)*

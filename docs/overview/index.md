@@ -3,12 +3,20 @@
 ## What is PSRL?
 
 **PSRL** is a reinforcement learning (RL) framework for efficient large language
-model post-training. It decouples rollout, reward, and training while coordinating
-them through a Parameter Server, an SMG-based rollout gateway, and TransferQueue.
+model (LLM) post-training. It decouples rollout, reward, and training while coordinating
+them through a Parameter Server.
 Generation and training progress asynchronously while model-version staleness remains
 explicitly bounded.
 
 Built on [veRL](https://github.com/volcengine/verl), PSRL focuses on the system bottlenecks that emerge in agentic, dynamic, and long-tailed RL workloads: uneven rollout latency, version-aware weight management, multi-turn KV cache reuse, and elastic resource allocation across rollout, reward, and training models.
+
+```{figure} /_static/img/PSRL_arch.svg
+:alt: PSRL System Architecture
+:width: 100%
+:align: center
+
+Overall PSRL system architecture.
+```
 
 ## Key Capabilities
 
@@ -23,12 +31,10 @@ Built on [veRL](https://github.com/volcengine/verl), PSRL focuses on the system 
 
 ## Supported Backends
 
-| Component | Backend | Parallelism |
+| Component | Backend | Deployment |
 |---|---|---|
-| **Rollout gateway** | SMG | HTTP/OpenAI ingress, PSRL-aware routing loop, gRPC proxy, TITO |
-| **Rollout engine** | vLLM | DP + TP + PP serving through PSRL's gRPC integration |
-| **Training** | FSDP2 | FSDP sharding + Ulysses SP |
-| **Training** | Megatron-LM | TP + PP + CP + EP |
+| **Rollout** | SMG + vLLM | SMG gateway (HTTP/OpenAI ingress, PSRL-aware routing loop, gRPC proxy, TITO) + vLLM backend (DP + TP + PP serving through PSRL's gRPC integration) |
+| **Training** | FSDP2 | HSDP sharding + Ulysses SP |
+| **Training** | Megatron | DP + TP + PP + CP + EP |
 
-See {doc}`../design/architecture` for the three-plane architecture and
-{doc}`../design/router_tito` for the SMG integration.
+See {doc}`../design/architecture` for the detailed architecture.
