@@ -274,10 +274,26 @@ Controls how generation requests are dispatched across rollout instances.
   - `throughput_optimal`: maximize global throughput using a cost model
   - `throughput_optimal_with_budget`: throughput-optimal with per-request token budget
   - `cache_aware`: SMG event-driven, multi-tier prefix-cache-aware routing
+  - `cache_aware_v1`: newer SMG cache-aware variant sharing the same `cache_aware_policy` knobs
 
-  **Default:** `round_robin`
+  **Default:** `request_num_balance`
 
-`routing_strategy.kv_transfer`
+`routing_strategy.cache_aware_policy`
+: Hyperparameters for the SMG cache-aware router. Only used when
+  `method` is `cache_aware` or `cache_aware_v1`.
+
+  | Sub-field | Description | Default |
+  |---|---|---|
+  | `cache_threshold` | Min cache-hit ratio for the approximate radix-tree fallback path (only when KV events are unavailable; event-driven scoring ignores it). Range 0.0–1.0. | `0.3` |
+  | `gpu_overlap_weight` | Weight for GPU-resident prefix hits in the multi-tier overlap score. A GPU hit costs ~zero reload. | `1.0` |
+  | `lmcache_overlap_weight` | Weight for off-GPU (LMCache) prefix hits. Cheaper than re-prefill but not free; keep `gpu >= lmcache`. | `0.5` |
+  | `balance_abs_threshold` | Shortest-queue load balancing triggers when BOTH the absolute and relative request-count thresholds are met. | `16` |
+  | `balance_rel_threshold` | Relative request-count spread threshold for the load-balancing trigger. | `1.5` |
+  | `balance_token_usage_threshold` | KV-utilization (token usage) level that triggers load balancing (`>= 1.0` disables). | `0.75` |
+  | `overload_token_usage_threshold` | KV-utilization level above which an instance is treated as overloaded (`>= 1.0` disables). | `0.85` |
+  | `eviction_interval_secs` | Approximate radix-tree maintenance interval (fallback when KV events are unavailable). | `60` |
+  | `max_tree_size` | Max size of the approximate prefix tree. | `67108864` (2^26) |
+  | `block_size` | KV block size used for event-driven routing. | `16` |
 : When re-routing a request to a different instance, optionally transfer its
   accumulated KV cache via LMCache P2P to avoid re-prefill. Requires
   `lmcache.enable` and `lmcache.enable_p2p`.
@@ -287,6 +303,7 @@ Controls how generation requests are dispatched across rollout instances.
   | `enable` | Master switch. **Default:** `False` |
   | `transfer_mode` | `async` (fire-and-forget), `sync` (await, no pin), `pin_sync` (pin→await→unpin). **Default:** `async` |
   | `transfer_timeout_ms` | Timeout for `sync`/`pin_sync` modes before falling back to re-prefill. **Default:** `5000` |
+  | `stats_log_interval_s` | Interval (s) between periodic KV-transfer stats log lines on each source instance. `0` suppresses stats even when transfer is enabled. **Default:** `30` |
 
 `routing_strategy.cost_model_path`
 : Path to a JSON cost model file (required for `throughput_optimal` methods).
@@ -305,9 +322,15 @@ Controls how generation requests are dispatched across rollout instances.
 : Use separate queues for different request priorities.
   **Default:** `False`
 
-`routing_strategy.enable_group_sampling_on_multi_instances`
-: Allow a single prompt group's responses to be distributed across multiple
-  rollout instances for load balance.
+`routing_strategy.enable_group_sticky`
+: Pin all rollout requests sharing a `prompt_id` to the same rollout instance so
+  their KV-cache prefixes are reused.
+  **Default:** `True`
+
+`routing_strategy.enable_trajectory_sticky`
+: Pin all generation calls within a single trajectory (subsequent turns) to the
+  same rollout instance that served the first turn, reusing the per-trajectory
+  KV-cache prefix. This is the trajectory-affinity knob for multi-turn agentic RL.
   **Default:** `True`
 
 `routing_strategy.delta_throughput_threshold`
@@ -327,9 +350,8 @@ Controls how generation requests are dispatched across rollout instances.
   **Default:** `30000`
 
 :::{important}
-Use `routing_strategy.method=cache_aware` with the default SMG gateway. Older configs
-may use `kv_cache_aware`, but that string is not accepted by the current SMG Python
-binding and does not enable PSRL's vLLM KV-event publisher.
+With the default SMG gateway, set `routing_strategy.method` to `cache_aware` or
+`cache_aware_v1`. These values enable PSRL's vLLM KV-event publisher.
 :::
 
 `routing_strategy.check_interval_in_ms`
@@ -504,6 +526,13 @@ in multi-turn workloads.
   stale-weight KV from being reused in the next generation round.
   **Default:** `True`
 
+`lmcache.multi_version_kv`
+: Tag cached KV entries with the model version so stale-weight entries are not
+  reused, instead of clearing the whole cache. Required when `enable_p2p: True`
+  (P2P does not support clear-on-weight-sync), in which case
+  `clear_on_weight_update` must be `False`.
+  **Default:** `False`
+
 `lmcache.reserve_local_cpu_size`
 : GiB of CPU memory to keep free and never use for KV offloading (headroom for other
   processes on the same node).
@@ -520,7 +549,7 @@ in multi-turn workloads.
 
 `lmcache.enable_async_loading`
 : Overlap KV cache retrieval with prefill computation to reduce time-to-first-token.
-  **Default:** `True`
+  **Default:** `False`. Currently has a known bug, do **not** enable.
 
 `lmcache.config_file`
 : Path to a full LMCache YAML config. When set, **overrides all individual fields
@@ -568,6 +597,12 @@ in multi-turn workloads.
 : ZMQ REPLY port for Controller → worker task dispatch.
   **Default:** `8400`
 
+`lmcache.gpu_pin_block_budget`
+: Max number of GPU KV blocks PSRL may hold pinned simultaneously, used by
+  `routing_strategy.kv_transfer.transfer_mode == "pin_sync"`. When exceeded, the
+  oldest-pinned trajectory is unpinned (PSRL-side LRU). `0` means no limit.
+  **Default:** `0`
+
 ```{seealso}
 {doc}`../design/kv_cache`, KV cache management architecture, LMCache Controller
 process, and cache eviction behavior.
@@ -597,11 +632,6 @@ workloads to share GPU memory.
 ### Agentic RL
 
 Settings for multi-turn agent training loops (tool-use, code generation, SWE-agent).
-
-`agentic_rl.sticky_session`
-: Pin all generation calls within a single trajectory to the same rollout instance.
-  Improves prefix-cache hit rate for multi-turn conversations.
-  **Default:** `False`
 
 `agentic_rl.manager_retry_on_error`
 : On rollout errors, retry via the manager instead of crashing the worker. On
@@ -705,8 +735,7 @@ routing loop, and TITO on this path. See {doc}`../design/router_tito`.
 
 ### TransferQueue
 
-TransferQueue configuration is a top-level block in `ppo_trainer.yaml`, not under
-`psrl`.
+TransferQueue configuration is a top-level block in `ppo_trainer.yaml`.
 
 `transfer_queue.enable`
 : Runtime integration flag. `main_ppo.py` enables it for the current PSRL training

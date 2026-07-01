@@ -130,10 +130,11 @@ Deployment topology is configured via `psrl.deployment.*`:
 ```yaml
 psrl:
   deployment:
-    train_nnodes: 2
-    gen_nnodes: 2
-    gen_tp: 8          # Tensor parallelism within each rollout instance
-    num_instances: 2   # Number of rollout instances
+    train_nnodes: 2                          # Training nodes
+    train_ngpus_per_node: 8                  # GPUs per training node
+    n_rollout_instances: 2                   # Number of rollout instances
+    rollout_nnodes_per_instance: 1           # Nodes per rollout instance
+    rollout_ngpus_per_node_per_instance: 8   # GPUs per node within each instance (TP size)
 ```
 
 :::{admonition} Scaling Guidance
